@@ -1,0 +1,122 @@
+# ======================================================
+# GENERAL
+# ======================================================
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+*.trace
+*.pid
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# User-specific files
+*.local
+*.env
+*.env.local
+*.user
+*.userosscache
+*.sln.docstates
+
+# ======================================================
+# DOTNET / C#
+# ======================================================
+bin/
+obj/
+out/
+publish/
+artifacts/
+.vs/
+*.suo
+*.user
+*.userprefs
+.nuget/
+global.json
+.dotnet/
+
+# Entity Framework
+Migrations/
+**/Migrations/
+
+# ASP.NET Core
+wwwroot/lib/
+appsettings.*.json
+appsettings.local.json
+*.publish/
+
+# ======================================================
+# JAVA
+# ======================================================
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.iml
+*.ipr
+*.iws
+.idea/
+.project
+.classpath
+.settings/
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# ======================================================
+# NODE / FRONTEND
+# ======================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+.vite/
+
+# ======================================================
+# DOCKER
+# ======================================================
+Dockerfile*
+docker-compose.override.yml
+*.dockerignore
+.docker/
+
+# ======================================================
+# OTHER TOOLS / IDE
+# ======================================================
+.vscode/
+.history/
+.terraform/
+
+# ======================================================
+# TEMP / CACHE
+# ======================================================
+*.cache
+*.tmp
+*.temp
+*.pidb
+*.seed
+
+# ======================================================
+# SENSITIVE / CONFIG
+# ======================================================
+*.key
+*.pfx
+*.pem
+*.crt
+*.cert
+*.env
+*.local
+secrets.json
