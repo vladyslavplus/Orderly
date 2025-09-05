@@ -1,25 +1,24 @@
 using Common.Extensions;
-using UserService.Data;
-using UserService.Extensions;
+using ProductService.Data;
+using ProductService.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
        .AddPostgresDbContext<ApplicationDbContext>(builder.Configuration)
-       .AddAppIdentity(builder.Configuration)
        .AddJwtAuthentication(builder.Configuration)
        .AddCommonHelpers()
        .AddFluentValidationSetup(typeof(Program).Assembly)
-       .AddUserServiceDependencies(builder.Configuration)
+       .AddProductServiceDependencies(builder.Configuration)
        .AddRabbitMqMassTransit(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerWithJwt("User Service API", "v1");
+builder.Services.AddSwaggerWithJwt("Product Service API", "v1");
 
 var app = builder.Build();
 
-await UserServiceSeeder.SeedAsync(app.Services);
+app.UseDatabaseMigration<ApplicationDbContext>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -27,7 +26,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseUserExceptionHandling();
+app.UseProductExceptionHandling();
 app.UseGlobalExceptionHandling();
 
 app.UseHttpsRedirection();

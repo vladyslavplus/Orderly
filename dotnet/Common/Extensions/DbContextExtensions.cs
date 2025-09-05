@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,16 @@ namespace Common.Extensions
                 options.UseNpgsql(connectionString));
 
             return services;
+        }
+
+        public static IApplicationBuilder UseDatabaseMigration<TContext>(
+            this IApplicationBuilder app)
+            where TContext : DbContext
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<TContext>();
+            db.Database.Migrate();
+            return app;
         }
     }
 }

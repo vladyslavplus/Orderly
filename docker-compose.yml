@@ -60,6 +60,30 @@ services:
     networks:
       - orderly-network
 
+  productservice:
+    build:
+      context: ./dotnet
+      dockerfile: ./ProductService/Dockerfile
+    ports:
+      - "5003:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Username=postgres;Password=12345678;Database=orderly-productservice-db;
+      Jwt__Key: QmJ0zLVzKn6hw4IcszPgQY2vDjJvYqVztuI4bq1+qk2ZCXR4DKZrGhZfrs0+NbyT
+      Jwt__Issuer: UserService
+      Jwt__Audience: Client
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: guest
+      RabbitMq__Password: guest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - orderly-network
+
 volumes:
   pgdata:
 

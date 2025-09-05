@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		init.sql = init.sql
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService", "dotnet\ProductService\ProductService.csproj", "{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{724512C4-B631-4DFA-81EB-AAF6B29FF41C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{724512C4-B631-4DFA-81EB-AAF6B29FF41C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{724512C4-B631-4DFA-81EB-AAF6B29FF41C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -43,6 +49,7 @@ Global
 		{E19A1DC3-0E20-4941-8CEC-95F5A99387A3} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{80906462-C63F-451F-988C-F3C53E7972D9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{724512C4-B631-4DFA-81EB-AAF6B29FF41C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{60DC1FCB-8AF9-4B9A-8192-B9EAC4AACC79} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0EBCE836-8DA4-4FD5-B9C6-341FDCD6FD37}
