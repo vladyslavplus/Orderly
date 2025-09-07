@@ -244,29 +244,39 @@ namespace UserService.Services
 
         private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
         {
+            var now = DateTime.UtcNow;
+            var expires = now.AddMinutes(double.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60"));
+
             var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:Issuer"]!),
+                new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:Audience"]!),
+                new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(expires).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim("name", user.UserName ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
             var userRoles = await _userManager.GetRolesAsync(user);
             foreach (var role in userRoles)
-                authClaims.Add(new Claim(ClaimTypes.Role, role));
+                authClaims.Add(new Claim("role", role));
 
-            var authSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            using var rsa = RSA.Create();
+            rsa.ImportFromPem(await File.ReadAllTextAsync(_configuration["Jwt:PrivateKeyPath"]!));
+            var signingKey = new RsaSecurityKey(rsa);
+            var creds = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
-                expires: DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60")),
+                expires: expires,
+                notBefore: now, 
                 claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                signingCredentials: creds
             );
 
-            return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public async Task<string> GenerateRefreshTokenAsync(Guid userId, CancellationToken cancellationToken = default)
