@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import messaging.ProductEventConsumer;
 import security.JwtUtils;
 
 import java.util.HashMap;
@@ -20,6 +21,9 @@ public class TestResource {
 
     @Inject
     JwtUtils jwtUtils;
+
+    @Inject
+    ProductEventConsumer productEventConsumer;
 
     @GET
     @Path("/public")
@@ -62,5 +66,21 @@ public class TestResource {
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         }
+    }
+
+    @GET
+    @Path("/cache")
+    @PermitAll
+    public Response getCacheInfo() {
+        int cacheSize = productEventConsumer.getCachedProductCount();
+
+        return Response.ok()
+                .entity(Map.of(
+                        "cacheSize", cacheSize,
+                        "message", cacheSize == 0 ?
+                                "Cache is empty - RabbitMQ messages not received" :
+                                "Cache has " + cacheSize + " products"
+                ))
+                .build();
     }
 }

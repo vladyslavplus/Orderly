@@ -6,6 +6,7 @@ import dtos.CartResponse;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -41,9 +42,9 @@ public class CartResource {
     @Path("/items")
     @RolesAllowed({"Admin", "User"})
     @Operation(summary = "Add item to cart")
-    public Response addItem(AddItemRequest request) {
+    public Response addItem(@Valid AddItemRequest request) {
         UUID userId = jwtUtils.getUserIdFromToken();
-        cartService.addItem(userId, request.getProductId(), request.getQuantity());
+        cartService.addItem(userId, request);
         return Response.status(Response.Status.CREATED).build();
     }
 
@@ -61,9 +62,10 @@ public class CartResource {
     @Path("/items/{productId}/quantity")
     @RolesAllowed({"Admin", "User"})
     @Operation(summary = "Change item quantity in cart")
-    public Response changeQuantity(@PathParam("productId") UUID productId, ChangeQuantityRequest request) {
+    public Response changeQuantity(@PathParam("productId") UUID productId,
+                                   @Valid ChangeQuantityRequest request) {
         UUID userId = jwtUtils.getUserIdFromToken();
-        cartService.changeItemQuantity(userId, productId, request.getDelta());
+        cartService.changeItemQuantity(userId, productId, request);
         return Response.ok().build();
     }
 

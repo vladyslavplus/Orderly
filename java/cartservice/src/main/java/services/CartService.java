@@ -1,11 +1,17 @@
 package services;
 
+import dtos.AddItemRequest;
 import dtos.CartResponse;
 import dtos.CartItemResponse;
+import dtos.ChangeQuantityRequest;
+import exceptions.CartItemNotFoundException;
+import exceptions.ProductNotAvailableException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.transaction.Transactional.TxType;
+import jakarta.validation.Valid;
+import messaging.ProductEventConsumer;
 import models.Cart;
 import models.CartItem;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -21,6 +27,9 @@ public class CartService {
 
     @Inject
     CartRepository cartRepository;
+
+    @Inject
+    ProductEventConsumer productConsumer;
 
     @Inject
     @Channel("cart-events")
@@ -44,28 +53,44 @@ public class CartService {
     }
 
     @Transactional
-    public void addItem(UUID userId, UUID productId, int quantity) {
+    public void addItem(UUID userId, @Valid AddItemRequest request) {
         Cart cart = getCartEntity(userId);
 
         CartItem existingItem = cart.items.stream()
-                .filter(i -> i.productId.equals(productId))
+                .filter(i -> i.productId.equals(request.getProductId()))
                 .findFirst()
                 .orElse(null);
 
+        int alreadyInCart = existingItem != null ? existingItem.quantity : 0;
+        int requestedNow = request.getQuantity();
+
+        Integer availableStock = productConsumer.getProductQuantity(request.getProductId().toString());
+        if (availableStock == null) {
+            throw new ProductNotAvailableException("Product not found or unavailable");
+        }
+
+        if (alreadyInCart + requestedNow > availableStock) {
+            throw new ProductNotAvailableException(
+                    "Cannot add product to cart. Already in cart: " + alreadyInCart +
+                            ", requested now: " + requestedNow +
+                            ", available product in stock: " + availableStock
+            );
+        }
+
         if (existingItem != null) {
-            existingItem.quantity += quantity;
+            existingItem.quantity = alreadyInCart + requestedNow;
             existingItem.persist();
         } else {
             CartItem newItem = new CartItem();
             newItem.cart = cart;
-            newItem.productId = productId;
-            newItem.quantity = quantity;
+            newItem.productId = request.getProductId();
+            newItem.quantity = requestedNow;
             newItem.persist();
             cart.items.add(newItem);
         }
 
         cart.persist();
-        cartEventEmitter.send("CartItemAdded:" + productId);
+        cartEventEmitter.send("CartItemAdded:" + request.getProductId());
     }
 
     @Transactional
@@ -75,14 +100,14 @@ public class CartService {
         CartItem item = cart.items.stream()
                 .filter(i -> i.productId.equals(productId))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() ->
+                        new CartItemNotFoundException("Cart item not found: " + productId)
+                );
 
-        if (item != null) {
-            item.delete();
-            cart.items.remove(item);
-            cart.persist();
-            cartEventEmitter.send("CartItemRemoved:" + productId);
-        }
+        item.delete();
+        cart.items.remove(item);
+        cart.persist();
+        cartEventEmitter.send("CartItemRemoved:" + productId);
     }
 
     @Transactional
@@ -99,7 +124,8 @@ public class CartService {
     }
 
     @Transactional
-    public void changeItemQuantity(UUID userId, UUID productId, int delta) {
+    public void changeItemQuantity(UUID userId, UUID productId, @Valid ChangeQuantityRequest request) {
+        int delta = request.getDelta();
         if (delta == 0) return;
 
         Cart cart = getCartEntity(userId);
