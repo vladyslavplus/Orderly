@@ -1,5 +1,7 @@
 ﻿using Contracts.Events.Product;
 using MassTransit;
+using ProductService.Consumers;
+using System.Net.Mime;
 
 namespace ProductService.Extensions
 {
@@ -14,12 +16,41 @@ namespace ProductService.Extensions
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<OrderCreatedConsumer>();
+                x.AddConsumer<OrderDeletedConsumer>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(host, "/", h =>
                     {
                         h.Username(username!);
                         h.Password(password!);
+                    });
+
+                    cfg.ReceiveEndpoint("product-service-order-deleted", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.ClearSerialization();
+                        e.DefaultContentType = new ContentType("application/json");
+                        e.UseRawJsonSerializer();
+                        e.Consumer<OrderDeletedConsumer>(context);
+                        e.Bind("order-deleted-events", s =>
+                        {
+                            s.ExchangeType = RabbitMQ.Client.ExchangeType.Fanout;
+                        });
+                    });
+
+                    cfg.ReceiveEndpoint("product-service-order-created", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.ClearSerialization();
+                        e.DefaultContentType = new ContentType("application/json");
+                        e.UseRawJsonSerializer();
+                        e.Consumer<OrderCreatedConsumer>(context);
+                        e.Bind("order-created-events", s =>
+                        {
+                            s.ExchangeType = RabbitMQ.Client.ExchangeType.Fanout;
+                        });
                     });
 
                     cfg.Message<ProductCreatedEvent>(e => e.SetEntityName("ProductCreatedEvent"));

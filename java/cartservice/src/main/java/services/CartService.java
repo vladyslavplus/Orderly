@@ -90,7 +90,9 @@ public class CartService {
         }
 
         cart.persist();
-        cartEventEmitter.send("CartItemAdded:" + request.getProductId());
+        cartEventEmitter.send(
+                "CartItemAdded:" + cart.userId + ":" + request.getProductId() + ":" + request.getQuantity()
+        );
     }
 
     @Transactional
@@ -107,7 +109,7 @@ public class CartService {
         item.delete();
         cart.items.remove(item);
         cart.persist();
-        cartEventEmitter.send("CartItemRemoved:" + productId);
+        cartEventEmitter.send("CartItemRemoved:" + cart.userId + ":" + productId);
     }
 
     @Transactional
@@ -144,11 +146,23 @@ public class CartService {
             return;
         }
 
+        Integer availableStock = productConsumer.getProductQuantity(productId.toString());
+        if (availableStock == null) {
+            throw new ProductNotAvailableException("Product not found or unavailable");
+        }
+
+        if (newQuantity > availableStock) {
+            throw new ProductNotAvailableException(
+                    "Cannot change quantity. Requested: " + newQuantity +
+                            ", available in stock: " + availableStock
+            );
+        }
+
         item.quantity = newQuantity;
         item.persist();
         cart.persist();
 
-        cartEventEmitter.send("CartItemQuantityChanged:" + productId + ":" + newQuantity);
+        cartEventEmitter.send("CartItemQuantityChanged:" + cart.userId + ":" + productId + ":" + newQuantity);
     }
 
     private Cart getCartEntity(UUID userId) {

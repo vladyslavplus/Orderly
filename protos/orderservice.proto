@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.vladyslavplus.orderservice";
+option java_outer_classname = "OrderProto";
+
+import "google/protobuf/empty.proto";
+
+package order;
+
+message OrderItem {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message Order {
+  string id = 1;
+  string userId = 2;
+  repeated OrderItem items = 3;
+  string status = 4;
+  string createdAtString = 5;
+  string deliveryAddress = 6;
+  string paymentType = 7;
+}
+
+message OrderIdRequest {
+  string orderId = 1;
+}
+
+message CreateOrderRequest {
+  string userId = 1;
+  string deliveryAddress = 2;
+  string paymentType = 3;
+}
+
+message UpdateOrderStatusRequest {
+  string orderId = 1;
+  string status = 2;
+}
+
+message OrdersResponse {
+  repeated Order orders = 1;
+}
+
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (Order);
+  rpc GetOrderById (OrderIdRequest) returns (Order);
+  rpc GetAllOrders (google.protobuf.Empty) returns (OrdersResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (Order);
+  rpc DeleteOrder (OrderIdRequest) returns (google.protobuf.Empty);
+}

@@ -102,38 +102,6 @@ services:
       QUARKUS_DATASOURCE_USERNAME: "postgres"
       QUARKUS_DATASOURCE_PASSWORD: "12345678"
       
-      MP_MESSAGING_OUTGOING_CART_EVENTS_HOST: "rabbitmq"
-      MP_MESSAGING_OUTGOING_CART_EVENTS_PORT: 5672
-      MP_MESSAGING_OUTGOING_CART_EVENTS_USERNAME: "guest"
-      MP_MESSAGING_OUTGOING_CART_EVENTS_PASSWORD: "guest"
-      
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_HOST: "rabbitmq"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_PORT: 5672
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_USERNAME: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_PASSWORD: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_EXCHANGE_NAME: "ProductCreatedEvent"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_EXCHANGE_TYPE: "fanout"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_QUEUE_NAME: "product-created"
-      MP_MESSAGING_INCOMING_PRODUCT_CREATED_ROUTING_KEYS: "#"
-      
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_HOST: "rabbitmq"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_PORT: 5672
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_USERNAME: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_PASSWORD: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_EXCHANGE_NAME: "ProductUpdatedEvent"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_EXCHANGE_TYPE: "fanout"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_QUEUE_NAME: "product-updated"
-      MP_MESSAGING_INCOMING_PRODUCT_UPDATED_ROUTING_KEYS: "#"
-      
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_HOST: "rabbitmq"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_PORT: 5672
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_USERNAME: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_PASSWORD: "guest"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_EXCHANGE_NAME: "ProductDeletedEvent"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_EXCHANGE_TYPE: "fanout"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_QUEUE_NAME: "product-deleted"
-      MP_MESSAGING_INCOMING_PRODUCT_DELETED_ROUTING_KEYS: "#"
-      
       MP_JWT_VERIFY_PUBLICKEY_LOCATION: "file:/etc/keys/public_key.pem"
       MP_JWT_VERIFY_ISSUER: "UserService"
       MP_JWT_VERIFY_AUDIENCES: "Client"
@@ -162,6 +130,50 @@ services:
         condition: service_healthy
     volumes:
        - ./dotnet/UserService/Keys/public_key.pem:/etc/keys/public_key.pem:ro
+    restart: unless-stopped
+    networks:
+      - orderly-network
+
+  orderservice:
+    build:
+      context: ./java/orderservice
+      dockerfile: ./src/main/docker/Dockerfile.jvm
+    ports:
+      - "9090:9090"
+      - "5005:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://postgres:5432/orderly-orderservice-db"
+      QUARKUS_DATASOURCE_USERNAME: "postgres"
+      QUARKUS_DATASOURCE_PASSWORD: "12345678"
+
+      MP_JWT_VERIFY_PUBLICKEY_LOCATION: "file:/etc/keys/public_key.pem"
+      MP_JWT_VERIFY_ISSUER: "UserService"
+      MP_JWT_VERIFY_AUDIENCES: "Client"
+      MP_JWT_TOKEN_HEADER: "Authorization"
+      MP_JWT_VERIFY_ALGORITHM: "RS256"
+
+      MP_JWT_VERIFY_GROUPS_PATH: "role"
+      SMALLRYE_JWT_PATH_GROUPS: "role"
+      SMALLRYE_JWT_CLAIMS_GROUPS: "role"
+
+      SMALLRYE_JWT_REQUIRE_NAMED_PRINCIPAL: "false"
+      SMALLRYE_JWT_PATH_MAPPING: "/=/"
+      
+      QUARKUS_LOG_CATEGORY_IO_SMALLRYE_JWT_LEVEL: "DEBUG"
+      QUARKUS_LOG_CATEGORY_IO_QUARKUS_SECURITY_LEVEL: "DEBUG"
+      QUARKUS_LOG_LEVEL: "DEBUG"
+
+      QUARKUS_SWAGGER_UI_ALWAYS_INCLUDE: "true"
+      QUARKUS_SWAGGER_UI_PERSIST_AUTHORIZATION: "true"
+      QUARKUS_SMALLRYE_OPENAPI_SECURITY_SCHEME: "jwt"
+      QUARKUS_SMALLRYE_OPENAPI_SECURITY_SCHEME_NAME: "bearerAuth"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./dotnet/UserService/Keys/public_key.pem:/etc/keys/public_key.pem:ro
     restart: unless-stopped
     networks:
       - orderly-network
