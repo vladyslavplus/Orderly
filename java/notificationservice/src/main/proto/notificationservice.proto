@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.vladyslavplus.notificationservice";
+option java_outer_classname = "NotificationProto";
+
+service NotificationService {
+  rpc SendNotification (NotificationRequest) returns (NotificationResponse);
+}
+
+message NotificationRequest {
+  string userId = 1;        
+  string recipient = 2;
+  string subject = 3;
+  string body = 4;
+  NotificationType type = 5;
+}
+
+message NotificationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+enum NotificationType {
+  EMAIL = 0;
+  SMS = 1;
+  PUSH = 2;
+}
